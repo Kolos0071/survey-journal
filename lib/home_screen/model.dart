@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class FormViewModel {
   final String label;
   final TextEditingController controller;
+  final TextEditingController? prevController;
   final TextInputType type;
   final bool isRequired;
 
   FormViewModel(
       {required this.label,
       required this.controller,
+      this.prevController,
       required this.type,
       this.isRequired = false});
 }

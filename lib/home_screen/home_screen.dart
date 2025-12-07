@@ -6,7 +6,7 @@ import 'package:pickquet/home_screen/model.dart';
 import 'package:pickquet/model.dart';
 
 class HomeScreen extends StatefulWidget {
-   HomeScreen({super.key, this.measurementList});
+  HomeScreen({super.key, this.measurementList});
   List<MeasurementModel>? measurementList;
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
         type: TextInputType.text,
         isRequired: true),
     FormViewModel(
-        label: "К",
+        label: "До",
         controller: TextEditingController(),
         type: TextInputType.text,
         isRequired: true),
@@ -42,18 +42,22 @@ class _HomeScreenState extends State<HomeScreen> {
     FormViewModel(
         label: "Лево",
         controller: TextEditingController(),
+        prevController: TextEditingController(),
         type: TextInputType.number),
     FormViewModel(
         label: "Право",
         controller: TextEditingController(),
+        prevController: TextEditingController(),
         type: TextInputType.number),
     FormViewModel(
         label: "Верх",
         controller: TextEditingController(),
+        prevController: TextEditingController(),
         type: TextInputType.number),
     FormViewModel(
         label: "Низ",
         controller: TextEditingController(),
+        prevController: TextEditingController(),
         type: TextInputType.number),
   ];
 
@@ -62,37 +66,44 @@ class _HomeScreenState extends State<HomeScreen> {
   void clearForm() {
     _formKey.currentState!.reset();
   }
+
   void saveMeasurement() async {
     if (_formKey.currentState!.validate()) {
-      final List<String> formValueList =
-          formViemModel.map((item) => item.controller.text).toList();
+      final List<dynamic> formValueList = formViemModel.map((item) {
+        if (item.prevController != null) {
+          return [
+            num.parse(item.controller.text),
+            num.parse(item.prevController!.text)
+          ];
+        }
+        return item.controller.text;
+      }).toList();
       final MeasurementModel measurement = MeasurementModel(
           from: formValueList[0],
           to: formValueList[1],
           distance: num.parse(formValueList[2]),
           compass: num.parse(formValueList[3].replaceAll(",", ".")),
           angle: num.parse(formValueList[4].replaceAll(",", ".")),
-          left: num.parse(formValueList[5].isNotEmpty?formValueList[5].replaceAll(",", "."):"0"),
-          right: num.parse(formValueList[6].isNotEmpty?formValueList[6].replaceAll(",", "."):"0"),
-          top: num.parse(formValueList[7].isNotEmpty?formValueList[7].replaceAll(",", "."):"0"),
-          bottom: num.parse(formValueList[8].isNotEmpty?formValueList[8].replaceAll(",", "."):"0"));
+          left: formValueList[5].isNotEmpty ? formValueList[5] : "0",
+          right: formValueList[6].isNotEmpty ? formValueList[5] : "0",
+          top: formValueList[7].isNotEmpty ? formValueList[5] : "0",
+          bottom: formValueList[8].isNotEmpty ? formValueList[5] : "0");
 
-          widget.measurementList!.add(measurement);
+      widget.measurementList!.add(measurement);
 
-
-    List<Map<String, dynamic>> jsonList =  widget.measurementList!.map((item) => item.toJson()).toList();
+      List<Map<String, dynamic>> jsonList =
+          widget.measurementList!.map((item) => item.toJson()).toList();
 
       if (await cacheService.cacheSurvey(jsonList)) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Измерение сохранено")));
-          clearForm();
+        clearForm();
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Произошла ошибка")));
       }
 
-            print(await cacheService.getSurvey());
-
+      print(await cacheService.getSurvey());
     }
   }
 
@@ -101,9 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: ElevatedButton(onPressed: (){
-          context.push("/piquets",extra: widget.measurementList);
-        }, child: Text("Пикетажный журнал")),
+        title: ElevatedButton(
+            onPressed: () {
+              context.push("/piquets", extra: widget.measurementList);
+            },
+            child: const Text("Пикетажный журнал")),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -130,25 +143,60 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         children: [
                           Text(item.label),
-                          TextFormField(
-                            validator: (value) {
-                              if (item.isRequired &&
-                                  (value == null || value.isEmpty)) {
-                                return 'Обязательное поле';
-                              }
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (item.isRequired &&
+                                        (value == null || value.isEmpty)) {
+                                      return 'Обязательное поле';
+                                    }
 
-                              if (item.type == TextInputType.number) {
-                                RegExp nonDigitRegex = RegExp(r"[^0-9.,]");
-                                if (!nonDigitRegex.hasMatch(value!)) {
-                                  return null;
-                                } else {
-                                  return "Значение должно быть цифровым";
-                                }
-                              }
-                              return null;
-                            },
-                            controller: item.controller,
-                            keyboardType: item.type,
+                                    if (item.type == TextInputType.number) {
+                                      RegExp nonDigitRegex =
+                                          RegExp(r"[^0-9.,]");
+                                      if (!nonDigitRegex.hasMatch(value!)) {
+                                        return null;
+                                      } else {
+                                        return "Значение должно быть цифровым";
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                  controller: item.controller,
+                                  keyboardType: item.type,
+                                ),
+                              ),
+                              if (item.prevController != null)
+                                const SizedBox(
+                                  width: 12,
+                                ),
+                              if (item.prevController != null)
+                                Expanded(
+                                  child: TextFormField(
+                                    validator: (value) {
+                                      if (item.isRequired &&
+                                          (value == null || value.isEmpty)) {
+                                        return 'Обязательное поле';
+                                      }
+
+                                      if (item.type == TextInputType.number) {
+                                        RegExp nonDigitRegex =
+                                            RegExp(r"[^0-9.,]");
+                                        if (!nonDigitRegex.hasMatch(value!)) {
+                                          return null;
+                                        } else {
+                                          return "Значение должно быть цифровым";
+                                        }
+                                      }
+                                      return null;
+                                    },
+                                    controller: item.prevController,
+                                    keyboardType: item.type,
+                                  ),
+                                ),
+                            ],
                           )
                         ],
                       ),

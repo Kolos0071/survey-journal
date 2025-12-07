@@ -4,10 +4,10 @@ class MeasurementModel {
   final num distance;
   final num compass;
   final num angle;
-  final num left;
-  final num right;
-  final num top;
-  final num bottom;
+  final List<num> left;
+  final List<num> right;
+  final List<num> top;
+  final List<num> bottom;
 
   MeasurementModel(
       {required this.from,
@@ -41,9 +41,9 @@ class MeasurementModel {
         distance: json['distance'] as num,
         compass: json['compass'] as num,
         angle: json['angle'] as num,
-        left: json['left'] as num,
-        right: json['right'] as num,
-        top: json['top'] as num,
-        bottom: json['left'] as num);
+        left: json['left'] as List<num>,
+        right: json['right'] as List<num>,
+        top: json['top'] as List<num>,
+        bottom: json['left'] as List<num>);
   }
 }
