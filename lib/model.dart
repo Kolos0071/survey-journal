@@ -41,9 +41,9 @@ class MeasurementModel {
         distance: json['distance'] as num,
         compass: json['compass'] as num,
         angle: json['angle'] as num,
-        left: json['left'] as List<num>,
-        right: json['right'] as List<num>,
-        top: json['top'] as List<num>,
-        bottom: json['left'] as List<num>);
+        left: (json['left'] as List<dynamic>).cast<num>(),
+        right: (json['right'] as List<dynamic>).cast<num>(),
+        top: (json['top'] as List<dynamic>).cast<num>(),
+        bottom: (json['left'] as List<dynamic>).cast<num>());
   }
 }

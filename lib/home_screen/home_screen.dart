@@ -72,8 +72,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final List<dynamic> formValueList = formViemModel.map((item) {
         if (item.prevController != null) {
           return [
-            num.parse(item.controller.text),
-            num.parse(item.prevController!.text)
+            item.controller.text.isNotEmpty
+                ? num.parse(item.controller.text)
+                : 0,
+            item.prevController!.text.isNotEmpty
+                ? num.parse(item.prevController!.text)
+                : 0
           ];
         }
         return item.controller.text;
