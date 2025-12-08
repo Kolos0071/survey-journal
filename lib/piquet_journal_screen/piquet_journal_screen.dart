@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:pickquet/model.dart';
 import 'package:path_provider/path_provider.dart';
@@ -32,9 +30,9 @@ class PiquetJournalScreen extends StatelessWidget {
 
   Future<void> writeMultipleRowsToFile(List<String> rows) async {
     final file = await _localFile;
-    final content = rows.join('\n'); // Join the list of strings with newlines
+    final content = rows.join('\n'); 
     await file.writeAsString(content,
-        mode: FileMode.write); // Overwrites if exists
+        mode: FileMode.write); 
   }
 
   void createFile() async {

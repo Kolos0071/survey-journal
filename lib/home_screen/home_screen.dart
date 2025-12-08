@@ -106,8 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Произошла ошибка")));
       }
-
-      print(await cacheService.getSurvey());
     }
   }
 
