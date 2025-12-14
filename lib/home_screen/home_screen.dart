@@ -89,9 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
           compass: num.parse(formValueList[3].replaceAll(",", ".")),
           angle: num.parse(formValueList[4].replaceAll(",", ".")),
           left: formValueList[5].isNotEmpty ? formValueList[5] : "0",
-          right: formValueList[6].isNotEmpty ? formValueList[5] : "0",
-          top: formValueList[7].isNotEmpty ? formValueList[5] : "0",
-          bottom: formValueList[8].isNotEmpty ? formValueList[5] : "0");
+          right: formValueList[6].isNotEmpty ? formValueList[6] : "0",
+          top: formValueList[7].isNotEmpty ? formValueList[7] : "0",
+          bottom: formValueList[8].isNotEmpty ? formValueList[8] : "0");
 
       widget.measurementList!.add(measurement);
 
