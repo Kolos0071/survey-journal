@@ -1,12 +1,24 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-
 class DataService {
   FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
+  Future<Map<String, String>> readAll() async {
+    final result = await secureStorage.readAll();
+    return result;
+  }
+
+  Future<bool> clearAll() async {
+    try {
+      secureStorage.deleteAll();
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
 
   Future<bool> addItem(String key, String value) async {
-    
     try {
       if (await secureStorage.read(key: key) == null) {
         await secureStorage.write(key: key, value: value);
@@ -25,9 +37,7 @@ class DataService {
   Future<String> readItem(String key) async {
     String value = '';
     try {
-
       if (await secureStorage.read(key: key) != null) {
-
         value = await secureStorage.read(key: key) as String;
 
         return value;
@@ -35,7 +45,7 @@ class DataService {
         return value;
       }
     } catch (e) {
-        print(e);
+      print(e);
 
       return value;
     }
@@ -44,6 +54,4 @@ class DataService {
   Future<void> deleteItem(String key) async {
     await secureStorage.delete(key: key);
   }
-
-
 }

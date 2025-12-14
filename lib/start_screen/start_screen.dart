@@ -31,11 +31,12 @@ class _StartScreenState extends State<StartScreen> {
           ),
           actions: [
             ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (controller.text.isEmpty) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
                         const SnackBar(content: Text("Введите название")));
                   } else {
+                    await cacheService.surveyName(controller.text);
                     Navigator.of(dialogContext).pop(controller.text);
                   }
                 },
@@ -61,8 +62,15 @@ class _StartScreenState extends State<StartScreen> {
               const Text("Может привести к потери данных предыдущих измерений"),
           actions: [
             ElevatedButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(true);
+                onPressed: () async {
+                  await cacheService.clearSurvey();
+                  setState(() {
+                    measurementList.clear();
+                  });
+                  final String name = await _nameSurvey(context);
+                  if (name.isNotEmpty) {
+                    Navigator.of(dialogContext).pop(true);
+                  }
                 },
                 child: const Text("Подтвердить")),
             ElevatedButton(
@@ -94,15 +102,10 @@ class _StartScreenState extends State<StartScreen> {
                   if (measurementList.isNotEmpty) {
                     final bool? confirmed = await _confirmationDialog(context);
                     if (confirmed != null && confirmed) {
-                      await cacheService.clearSurvey();
-                      setState(() {
-                        measurementList.clear();
-                      });
                       context.push("/home");
                     }
                   } else {
                     final String surveyName = await _nameSurvey(context);
-                    print(surveyName);
                     if (surveyName.isNotEmpty) context.push("/home");
                   }
                 },
