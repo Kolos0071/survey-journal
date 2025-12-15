@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:piquet/home_screen/home_screen.dart';
-import 'package:piquet/model.dart';
-import 'package:piquet/piquet_journal_screen/piquet_journal_screen.dart';
-import 'package:piquet/start_screen/start_screen.dart';
+import 'package:pickquet/home_screen/home_screen.dart';
+import 'package:pickquet/model.dart';
+import 'package:pickquet/piquet_journal_screen/piquet_journal_screen.dart';
+import 'package:pickquet/start_screen/start_screen.dart';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[

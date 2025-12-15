@@ -1,4 +1,4 @@
-package com.example.piquet
+package com.example.pickquet
 
 import io.flutter.embedding.android.FlutterActivity
 

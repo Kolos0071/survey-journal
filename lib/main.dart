@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:piquet/app.dart';
-import 'package:piquet/cache.dart';
-import 'package:piquet/data_service.dart';
+import 'package:pickquet/app.dart';
+import 'package:pickquet/cache.dart';
+import 'package:pickquet/data_service.dart';
 
 void main() async{
     final DataService dataService = DataService();
@@ -14,6 +14,6 @@ void main() async{
 
 
 
-  runApp(const PiquetApp());
+  runApp(const PickuetApp());
 }
 

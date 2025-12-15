@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:piquet/data_service.dart';
-import 'package:piquet/model.dart';
+import 'package:pickquet/data_service.dart';
+import 'package:pickquet/model.dart';
 
 class CacheService {
   static String currentSurvey = "current-survey";

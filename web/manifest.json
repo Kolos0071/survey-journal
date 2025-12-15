@@ -1,6 +1,6 @@
 {
-    "name": "piquet",
-    "short_name": "piquet",
+    "name": "pickquet",
+    "short_name": "pickquet",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:piquet/cache.dart';
-import 'package:piquet/home_screen/model.dart';
-import 'package:piquet/model.dart';
+import 'package:pickquet/cache.dart';
+import 'package:pickquet/home_screen/model.dart';
+import 'package:pickquet/model.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key, this.measurementList});
