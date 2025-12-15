@@ -88,13 +88,16 @@ class _StartScreenState extends State<StartScreen> {
   Future<void> _surveyListDialog(BuildContext content) async {
 
     final List<String> keyList = await cacheService.getSurveyList();
+    final String currentSurvey = await cacheService.getSurveyName();
     return await showDialog(
       context: context,
-      builder: (dialogContext) {
+      builder: (dialogContext)  {
         return Dialog(
           child: Padding(
             padding: const EdgeInsets.all(18.0),
             child: Column(children: [
+              const Text("Текущее измерение:"),
+              Text(currentSurvey),
               Expanded(
                 child: ListView.separated(
                   itemBuilder: (context, index) {
@@ -112,10 +115,10 @@ class _StartScreenState extends State<StartScreen> {
                       ),
                   itemCount: keyList.length),
               ),
-              ElevatedButton(onPressed: (){ 
+              ElevatedButton(style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.red)),onPressed: (){ 
                 cacheService.clearList();
                 Navigator.of(context).pop();
-              }, child: const Text("Очистить"))
+              }, child: const Text("Очистить", style: TextStyle(color: Colors.white),))
             ],)
           ),
         );

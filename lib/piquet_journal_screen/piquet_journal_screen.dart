@@ -47,12 +47,10 @@ class PiquetJournalScreen extends StatelessWidget {
     try {
       List<String> fileString = [];
 
-      fileString.add(tableHeader.join(' '));
-
       for (final item in measurementList) {
         fileString.add(
           "${item.from} ${item.to} ${item.distance} ${item.compass} "
-          "${item.angle} ${item.left} ${item.right} ${item.top} ${item.bottom}"
+          "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}"
         );
       }
 

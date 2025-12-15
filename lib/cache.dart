@@ -4,7 +4,6 @@ import 'package:pickquet/data_service.dart';
 import 'package:pickquet/model.dart';
 
 class CacheService {
-  static String firstEntryKey = "is-first-entry";
   static String currentSurvey = "current-survey";
 
   final DataService service;
@@ -13,6 +12,10 @@ class CacheService {
 
   Future<bool> surveyName(String name) async{
     return await service.addItem(currentSurvey, name);
+  }
+
+  Future<String> getSurveyName() async{
+    return await service.readItem(currentSurvey);
   }
 
   Future<List<String>> getSurveyList() async {
@@ -26,7 +29,6 @@ class CacheService {
     });
     return keysList;
   }
-// Resolve problem with survey name
   Future<bool> cacheSurvey(List<Map<String, dynamic>> data) async {
     final String surveyName = await service.readItem(currentSurvey);
     final String stringValue = json.encode(data);
