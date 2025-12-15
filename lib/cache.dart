@@ -4,7 +4,6 @@ import 'package:pickquet/data_service.dart';
 import 'package:pickquet/model.dart';
 
 class CacheService {
-  static String surveyKey = "survey";
   static String firstEntryKey = "is-first-entry";
   static String currentSurvey = "current-survey";
 
@@ -13,26 +12,31 @@ class CacheService {
   CacheService({required this.service});
 
   Future<bool> surveyName(String name) async{
-    return await service.addItem(currentSurvey, "$name-${DateTime.now().toString()}");
+    return await service.addItem(currentSurvey, name);
   }
 
-  Future<void> getSurveyList() async {
+  Future<List<String>> getSurveyList() async {
     final result  = await service.readAll();
+    List<String> keysList = [];
 
-
-    
+    result.forEach((key, value){
+      if(key != currentSurvey) {
+        keysList.add(key);
+      }
+    });
+    return keysList;
   }
-
+// Resolve problem with survey name
   Future<bool> cacheSurvey(List<Map<String, dynamic>> data) async {
     final String surveyName = await service.readItem(currentSurvey);
     final String stringValue = json.encode(data);
-    return await service.addItem("$surveyKey-$surveyName", stringValue);
+    return await service.addItem(surveyName, stringValue);
   }
 
   Future<List<MeasurementModel>> getSurvey() async {
     final String surveyName = await service.readItem(currentSurvey);
 
-    final String stringValue = await service.readItem("$surveyKey-$surveyName");
+    final String stringValue = await service.readItem(surveyName);
     if (stringValue.isNotEmpty) {
       final List<dynamic> convertValue = json.decode(stringValue);
 
@@ -42,6 +46,10 @@ class CacheService {
     } else {
       return [];
     }
+  }
+
+  Future<void> clearList() async {
+    await service.clearAll();
   }
 
   Future<void> clearSurvey() async {

@@ -36,7 +36,8 @@ class _StartScreenState extends State<StartScreen> {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
                         const SnackBar(content: Text("Введите название")));
                   } else {
-                    await cacheService.surveyName(controller.text);
+                    final date = DateTime.now();
+                    await cacheService.surveyName("${controller.text}-${date.day}.${date.month}.${date.year}");
                     Navigator.of(dialogContext).pop(controller.text);
                   }
                 },
@@ -84,6 +85,44 @@ class _StartScreenState extends State<StartScreen> {
     );
   }
 
+  Future<void> _surveyListDialog(BuildContext content) async {
+
+    final List<String> keyList = await cacheService.getSurveyList();
+    return await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Column(children: [
+              Expanded(
+                child: ListView.separated(
+                  itemBuilder: (context, index) {
+                    final item = keyList[index];
+                    return ElevatedButton(onPressed: () async{
+                      await cacheService.surveyName(item);
+                        measurementList = await cacheService.getSurvey();
+                        setState(() {
+                          Navigator.of(context).pop();
+                        });
+                    }, child: Text(item));
+                  },
+                  separatorBuilder: (context, index) => const SizedBox(
+                        height: 12,
+                      ),
+                  itemCount: keyList.length),
+              ),
+              ElevatedButton(onPressed: (){ 
+                cacheService.clearList();
+                Navigator.of(context).pop();
+              }, child: const Text("Очистить"))
+            ],)
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     getCache();
@@ -93,6 +132,12 @@ class _StartScreenState extends State<StartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.upload),
+        onPressed: () {
+          _surveyListDialog(context);
+        },
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
