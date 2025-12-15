@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                     if (item.type == TextInputType.number) {
                                       RegExp nonDigitRegex =
-                                          RegExp(r"[^0-9.,]");
+                                          RegExp(r"[^-0-9.,]");
                                       if (!nonDigitRegex.hasMatch(value!)) {
                                         return null;
                                       } else {

@@ -12,21 +12,28 @@ class PiquetJournalScreen extends StatelessWidget {
 
   final List<MeasurementModel> measurementList;
   final List<String> tableHeader = [
-    "from", "to", "tape", "compass", "clino", 
-    "left", "right", "up", "down"
+    "from",
+    "to",
+    "tape",
+    "compass",
+    "clino",
+    "left",
+    "right",
+    "up",
+    "down"
   ];
 
   Future<File> get _localFile async {
-    Directory directory;
+    Directory? directory;
     if (defaultTargetPlatform == TargetPlatform.android) {
-
+      try {
         directory = Directory('/storage/emulated/0/Download');
-      } else {
-        directory = await getApplicationDocumentsDirectory();
+      } catch (e) {
+        directory = await getDownloadsDirectory();
       }
+    }
     try {
-      
-      return File('${directory.path}/piquet_journal.txt');
+      return File('${directory!.path}/piquet_journal.txt');
     } catch (e) {
       rethrow;
     }
@@ -49,9 +56,8 @@ class PiquetJournalScreen extends StatelessWidget {
 
       for (final item in measurementList) {
         fileString.add(
-          "${item.from} ${item.to} ${item.distance} ${item.compass} "
-          "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}"
-        );
+            "${item.from} ${item.to} ${item.distance} ${item.compass} "
+            "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}");
       }
 
       await _writeToFile(fileString);
@@ -61,16 +67,14 @@ class PiquetJournalScreen extends StatelessWidget {
         String fileContent = await file.readAsString();
         print('File saved to: ${file.path}');
         print('File size: ${fileContent.length} characters');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Файл сохранен: ${file.path}'))
-        );
+            SnackBar(content: Text('Файл сохранен: ${file.path}')));
       }
     } catch (e) {
       print('Error creating file: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка сохранения: $e'))
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Ошибка сохранения: $e')));
     }
   }
 
@@ -117,39 +121,48 @@ class PiquetJournalScreen extends StatelessWidget {
                       for (final row in measurementList)
                         TableRow(
                           children: [
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.from),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.to),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.distance.toStringAsFixed(2)),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.compass.toStringAsFixed(1)),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.angle.toStringAsFixed(1)),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.left.toString()),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.right.toString()),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.top.toString()),
                             )),
-                            TableCell(child: Padding(
+                            TableCell(
+                                child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.bottom.toString()),
                             )),
