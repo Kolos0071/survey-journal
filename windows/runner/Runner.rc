@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "pickquet" "\0"
+            VALUE "FileDescription", "piquet" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "pickquet" "\0"
+            VALUE "InternalName", "piquet" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "pickquet.exe" "\0"
-            VALUE "ProductName", "pickquet" "\0"
+            VALUE "OriginalFilename", "piquet.exe" "\0"
+            VALUE "ProductName", "piquet" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

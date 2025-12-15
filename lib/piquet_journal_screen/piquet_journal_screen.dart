@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pickquet/model.dart';
+import 'package:piquet/model.dart';
 import 'package:path_provider/path_provider.dart';
 
 class PiquetJournalScreen extends StatelessWidget {

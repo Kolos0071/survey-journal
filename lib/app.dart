@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pickquet/router.dart';
+import 'package:piquet/router.dart';
 
-class PickuetApp extends StatelessWidget {
-  const PickuetApp({super.key});
+class PiquetApp extends StatelessWidget {
+  const PiquetApp({super.key});
 
   @override
   Widget build(BuildContext context) {

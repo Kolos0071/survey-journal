@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pickquet/cache.dart';
-import 'package:pickquet/model.dart';
+import 'package:piquet/cache.dart';
+import 'package:piquet/model.dart';
 
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
