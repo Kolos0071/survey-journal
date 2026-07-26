@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:pickquet/model.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PiquetJournalScreen extends StatelessWidget {
   PiquetJournalScreen({
@@ -23,58 +26,66 @@ class PiquetJournalScreen extends StatelessWidget {
     "down"
   ];
 
-  Future<File> get _localFile async {
-    Directory? directory;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      try {
-        directory = Directory('/storage/emulated/0/Download');
-      } catch (e) {
-        directory = await getDownloadsDirectory();
-      }
+  static const String _fileName = 'piquet_journal.txt';
+
+  String get _fileContent {
+    final List<String> rows = [];
+    for (final item in measurementList) {
+      rows.add("${item.from} ${item.to} ${item.distance} ${item.compass} "
+          "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}");
     }
-    try {
-      return File('${directory!.path}/piquet_journal.txt');
-    } catch (e) {
-      rethrow;
-    }
+    return rows.join('\n');
   }
 
-  Future<void> _writeToFile(List<String> rows) async {
+  Future<void> _saveAs(BuildContext context) async {
     try {
-      final file = await _localFile;
-      final content = rows.join('\n');
-      await file.writeAsString(content, mode: FileMode.writeOnly);
-    } catch (e) {
-      print('Error writing file: $e');
-      rethrow;
-    }
-  }
+      final Uint8List bytes = Uint8List.fromList(utf8.encode(_fileContent));
 
-  Future<void> createFile(BuildContext context) async {
-    try {
-      List<String> fileString = [];
+      final String? savedPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Сохранить пикетажный журнал',
+        fileName: _fileName,
+        bytes: bytes,
+        type: FileType.custom,
+        allowedExtensions: ['txt'],
+      );
 
-      for (final item in measurementList) {
-        fileString.add(
-            "${item.from} ${item.to} ${item.distance} ${item.compass} "
-            "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}");
+      if (!context.mounted) return;
+
+      if (savedPath == null) {
+        return;
       }
 
-      await _writeToFile(fileString);
-
-      final file = await _localFile;
-      if (await file.exists()) {
-        String fileContent = await file.readAsString();
-        print('File saved to: ${file.path}');
-        print('File size: ${fileContent.length} characters');
-
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Файл сохранен: ${file.path}')));
+      final File file = File(savedPath);
+      if (!(await file.exists())) {
+        // On some platforms saveFile only returns the chosen path
+        // without writing the bytes, so write it ourselves.
+        await file.writeAsBytes(bytes);
       }
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Файл сохранен: $savedPath')));
     } catch (e) {
-      print('Error creating file: $e');
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Ошибка сохранения: $e')));
+    }
+  }
+
+  Future<void> _share(BuildContext context) async {
+    try {
+      final Directory tempDir = await getTemporaryDirectory();
+      final File tempFile = File('${tempDir.path}/$_fileName');
+      await tempFile.writeAsString(_fileContent);
+
+      await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        text: 'Пикетажный журнал',
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Ошибка отправки: $e')));
     }
   }
 
@@ -84,10 +95,26 @@ class PiquetJournalScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Пикетажный журнал"),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => createFile(context),
-        child: const Icon(Icons.save),
-      ),
+      floatingActionButton: measurementList.isEmpty
+          ? null
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'share',
+                  onPressed: () => _share(context),
+                  tooltip: 'Поделиться',
+                  child: const Icon(Icons.share),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton(
+                  heroTag: 'saveAs',
+                  onPressed: () => _saveAs(context),
+                  tooltip: 'Сохранить как',
+                  child: const Icon(Icons.save),
+                ),
+              ],
+            ),
       body: measurementList.isEmpty
           ? const Center(child: Text('Нет данных для отображения'))
           : SingleChildScrollView(
