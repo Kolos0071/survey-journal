@@ -61,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
         type: TextInputType.number),
   ];
 
+  final TextEditingController _commentController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
   final CacheService cacheService = GetIt.I<CacheService>();
   void clearForm() {
@@ -91,7 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
           left: formValueList[5].isNotEmpty ? formValueList[5] : "0",
           right: formValueList[6].isNotEmpty ? formValueList[6] : "0",
           top: formValueList[7].isNotEmpty ? formValueList[7] : "0",
-          bottom: formValueList[8].isNotEmpty ? formValueList[8] : "0");
+          bottom: formValueList[8].isNotEmpty ? formValueList[8] : "0",
+          comment: _commentController.text.trim());
 
       widget.measurementList!.add(measurement);
 
@@ -198,18 +201,37 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Form(
             key: _formKey,
-            child: GridView.builder(
-              padding: const EdgeInsets.only(bottom: 80),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                mainAxisExtent: 100,
-              ),
-              itemCount: formViemModel.length,
-              itemBuilder: (context, index) {
-                return _buildField(formViemModel[index]);
-              },
+            child: Column(
+              children: [
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      mainAxisExtent: 100,
+                    ),
+                    itemCount: formViemModel.length,
+                    itemBuilder: (context, index) {
+                      return _buildField(formViemModel[index]);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  child: TextFormField(
+                    controller: _commentController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: "Комментарий",
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ],
             )),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

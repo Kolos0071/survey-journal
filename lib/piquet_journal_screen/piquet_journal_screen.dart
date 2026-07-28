@@ -23,7 +23,8 @@ class PiquetJournalScreen extends StatelessWidget {
     "left",
     "right",
     "up",
-    "down"
+    "down",
+    "comment",
   ];
 
   static const String _fileName = 'piquet_journal.txt';
@@ -31,8 +32,10 @@ class PiquetJournalScreen extends StatelessWidget {
   String get _fileContent {
     final List<String> rows = [];
     for (final item in measurementList) {
+      final String comment =
+          item.comment.isNotEmpty ? ' #${item.comment}' : '';
       rows.add("${item.from} ${item.to} ${item.distance} ${item.compass} "
-          "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}");
+          "${item.angle} ${item.left.toString().replaceAll(",", " ")} ${item.right.toString().replaceAll(",", " ")} ${item.top.toString().replaceAll(",", " ")} ${item.bottom.toString().replaceAll(",", " ")}$comment");
     }
     return rows.join('\n');
   }
@@ -192,6 +195,11 @@ class PiquetJournalScreen extends StatelessWidget {
                                 child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(row.bottom.toString()),
+                            )),
+                            TableCell(
+                                child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(row.comment),
                             )),
                           ],
                         ),

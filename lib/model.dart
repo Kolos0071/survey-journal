@@ -8,6 +8,7 @@ class MeasurementModel {
   final List<num> right;
   final List<num> top;
   final List<num> bottom;
+  final String comment;
 
   MeasurementModel(
       {required this.from,
@@ -18,7 +19,8 @@ class MeasurementModel {
       required this.left,
       required this.right,
       required this.top,
-      required this.bottom});
+      required this.bottom,
+      this.comment = ""});
 
   Map<String, dynamic> toJson() {
     return {
@@ -31,6 +33,7 @@ class MeasurementModel {
       'right': right,
       'top': top,
       'bottom': bottom,
+      'comment': comment,
     };
   }
 
@@ -44,6 +47,7 @@ class MeasurementModel {
         left: (json['left'] as List<dynamic>).cast<num>(),
         right: (json['right'] as List<dynamic>).cast<num>(),
         top: (json['top'] as List<dynamic>).cast<num>(),
-        bottom: (json['bottom'] as List<dynamic>).cast<num>());
+        bottom: (json['bottom'] as List<dynamic>).cast<num>(),
+        comment: json['comment'] as String? ?? "");
   }
 }
