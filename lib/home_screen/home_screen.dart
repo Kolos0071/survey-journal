@@ -109,6 +109,80 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildField(FormViewModel item) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+      padding: const EdgeInsets.all(6.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            item.label,
+            style: const TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  style: const TextStyle(fontSize: 13),
+                  decoration: const InputDecoration(isDense: true),
+                  validator: (value) {
+                    if (item.isRequired &&
+                        (value == null || value.isEmpty)) {
+                      return 'Обязательное поле';
+                    }
+
+                    if (item.type == TextInputType.number) {
+                      RegExp nonDigitRegex = RegExp(r"[^-0-9.,]");
+                      if (!nonDigitRegex.hasMatch(value!)) {
+                        return null;
+                      } else {
+                        return "Должно быть цифровым";
+                      }
+                    }
+                    return null;
+                  },
+                  controller: item.controller,
+                  keyboardType: item.type,
+                ),
+              ),
+              if (item.prevController != null) const SizedBox(width: 6),
+              if (item.prevController != null)
+                Expanded(
+                  child: TextFormField(
+                    style: const TextStyle(fontSize: 13),
+                    decoration: const InputDecoration(isDense: true),
+                    validator: (value) {
+                      if (item.isRequired &&
+                          (value == null || value.isEmpty)) {
+                        return 'Обязательное поле';
+                      }
+
+                      if (item.type == TextInputType.number) {
+                        RegExp nonDigitRegex = RegExp(r"[^0-9.,]");
+                        if (!nonDigitRegex.hasMatch(value!)) {
+                          return null;
+                        } else {
+                          return "Должно быть цифровым";
+                        }
+                      }
+                      return null;
+                    },
+                    controller: item.prevController,
+                    keyboardType: item.type,
+                  ),
+                ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,94 +198,24 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Form(
             key: _formKey,
-            child: ListView.separated(
-              separatorBuilder: (context, index) => const SizedBox(
-                height: 12,
+            child: GridView.builder(
+              padding: const EdgeInsets.only(bottom: 80),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                mainAxisExtent: 100,
               ),
-              itemCount: formViemModel.length + 1,
+              itemCount: formViemModel.length,
               itemBuilder: (context, index) {
-                if (index == formViemModel.length) {
-                  return const SizedBox(
-                    height: 60,
-                  );
-                } else {
-                  final item = formViemModel[index];
-
-                  return Container(
-                    decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 2)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Text(item.label),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  validator: (value) {
-                                    if (item.isRequired &&
-                                        (value == null || value.isEmpty)) {
-                                      return 'Обязательное поле';
-                                    }
-
-                                    if (item.type == TextInputType.number) {
-                                      RegExp nonDigitRegex =
-                                          RegExp(r"[^-0-9.,]");
-                                      if (!nonDigitRegex.hasMatch(value!)) {
-                                        return null;
-                                      } else {
-                                        return "Значение должно быть цифровым";
-                                      }
-                                    }
-                                    return null;
-                                  },
-                                  controller: item.controller,
-                                  keyboardType: item.type,
-                                ),
-                              ),
-                              if (item.prevController != null)
-                                const SizedBox(
-                                  width: 12,
-                                ),
-                              if (item.prevController != null)
-                                Expanded(
-                                  child: TextFormField(
-                                    validator: (value) {
-                                      if (item.isRequired &&
-                                          (value == null || value.isEmpty)) {
-                                        return 'Обязательное поле';
-                                      }
-
-                                      if (item.type == TextInputType.number) {
-                                        RegExp nonDigitRegex =
-                                            RegExp(r"[^0-9.,]");
-                                        if (!nonDigitRegex.hasMatch(value!)) {
-                                          return null;
-                                        } else {
-                                          return "Значение должно быть цифровым";
-                                        }
-                                      }
-                                      return null;
-                                    },
-                                    controller: item.prevController,
-                                    keyboardType: item.type,
-                                  ),
-                                ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                }
+                return _buildField(formViemModel[index]);
               },
             )),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: ElevatedButton(
         onPressed: saveMeasurement,
-        child: const Text("Продолжить"),
+        child: const Text("Записать"),
       ),
     );
   }
