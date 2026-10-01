@@ -6,8 +6,7 @@ import 'package:pickquet/home_screen/model.dart';
 import 'package:pickquet/model.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({super.key, this.measurementList});
-  List<MeasurementModel>? measurementList;
+  const HomeScreen({super.key});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -73,39 +72,47 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_formKey.currentState!.validate()) {
       final List<dynamic> formValueList = formViemModel.map((item) {
         if (item.prevController != null) {
-          return [
-            item.controller.text.isNotEmpty
-                ? num.parse(item.controller.text)
-                : 0,
-            item.prevController!.text.isNotEmpty
-                ? num.parse(item.prevController!.text)
-                : 0
+          final bool curEmpty = item.controller.text.isEmpty;
+          final bool prevEmpty = item.prevController!.text.isEmpty;
+          // Both sides left blank => not measured at all (Therion: bare "0"),
+          // as opposed to an explicit [0, 0] reading.
+          if (curEmpty && prevEmpty) {
+            return null;
+          }
+          return <num>[
+            curEmpty ? 0 : num.parse(item.controller.text),
+            prevEmpty ? 0 : num.parse(item.prevController!.text),
           ];
         }
         return item.controller.text;
       }).toList();
       final MeasurementModel measurement = MeasurementModel(
-          from: formValueList[0],
-          to: formValueList[1],
-          distance: num.parse(formValueList[2]),
-          compass: num.parse(formValueList[3].replaceAll(",", ".")),
-          angle: num.parse(formValueList[4].replaceAll(",", ".")),
-          left: formValueList[5].isNotEmpty ? formValueList[5] : "0",
-          right: formValueList[6].isNotEmpty ? formValueList[6] : "0",
-          top: formValueList[7].isNotEmpty ? formValueList[7] : "0",
-          bottom: formValueList[8].isNotEmpty ? formValueList[8] : "0",
+          from: formValueList[0] as String,
+          to: formValueList[1] as String,
+          distance: num.parse(formValueList[2] as String),
+          compass:
+              num.parse((formValueList[3] as String).replaceAll(",", ".")),
+          angle: num.parse((formValueList[4] as String).replaceAll(",", ".")),
+          left: formValueList[5] as List<num>?,
+          right: formValueList[6] as List<num>?,
+          top: formValueList[7] as List<num>?,
+          bottom: formValueList[8] as List<num>?,
           comment: _commentController.text.trim());
 
-      widget.measurementList!.add(measurement);
+      // Read the freshest persisted list right before appending, so this
+      // never clobbers measurements added/edited elsewhere (e.g. the journal
+      // screen) since this screen was opened.
+      final List<MeasurementModel> currentList =
+          await cacheService.getSurvey();
+      currentList.add(measurement);
 
-      List<Map<String, dynamic>> jsonList =
-          widget.measurementList!.map((item) => item.toJson()).toList();
-
-      if (await cacheService.cacheSurvey(jsonList)) {
+      if (await cacheService.saveSurvey(currentList)) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Измерение сохранено")));
         clearForm();
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Произошла ошибка")));
       }
@@ -193,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: ElevatedButton(
             onPressed: () {
-              context.push("/piquets", extra: widget.measurementList);
+              context.push("/piquets");
             },
             child: const Text("Пикетажный журнал")),
       ),

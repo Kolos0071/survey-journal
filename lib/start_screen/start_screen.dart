@@ -161,7 +161,7 @@ class _StartScreenState extends State<StartScreen> {
             if (measurementList.isNotEmpty)
               ElevatedButton(
                   onPressed: () {
-                    context.push("/home", extra: measurementList);
+                    context.push("/home");
                   },
                   child: Text("Продолжиь измерение")),
           ],
