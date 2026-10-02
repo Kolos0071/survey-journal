@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pickquet/cache.dart';
 import 'package:pickquet/model.dart';
+import 'package:pickquet/piquet_journal_screen/survey_line.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -28,7 +29,11 @@ class PiquetJournalScreen extends StatefulWidget {
   State<PiquetJournalScreen> createState() => _PiquetJournalScreenState();
 }
 
-class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
+class _PiquetJournalScreenState extends State<PiquetJournalScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController =
+      TabController(length: 2, vsync: this)
+        ..addListener(() => setState(() {}));
   final CacheService cacheService = GetIt.I<CacheService>();
   final List<String> tableHeader = [
     "from",
@@ -53,6 +58,12 @@ class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
   void initState() {
     super.initState();
     _loadSurvey();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSurvey() async {
@@ -97,7 +108,7 @@ class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
     if (confirmed != true) return;
 
     // Re-read the freshest list before mutating so we never clobber a
-    // concurrent change (e.g. a new measurement added from the home screen).
+    // concurrent change (e.g. an edit saved from another open dialog).
     final List<MeasurementModel> currentList = await cacheService.getSurvey();
     final int freshIndex = currentList.indexOf(target);
     if (freshIndex != -1) {
@@ -105,6 +116,28 @@ class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
     } else if (index < currentList.length) {
       currentList.removeAt(index);
     }
+    await cacheService.saveSurvey(currentList);
+    if (!mounted) return;
+    setState(() {
+      measurementList = currentList;
+    });
+  }
+
+  Future<void> _add() async {
+    // Continue the traverse from the last real station (splays end in "-").
+    final String? lastStation = measurementList.reversed
+        .map((m) => m.to)
+        .where((name) => name != '-' && name != '.')
+        .firstOrNull;
+    final MeasurementModel? added = await showDialog<MeasurementModel>(
+      context: context,
+      builder: (dialogContext) =>
+          _EditMeasurementDialog(initialFrom: lastStation),
+    );
+    if (added == null) return;
+
+    final List<MeasurementModel> currentList = await cacheService.getSurvey();
+    currentList.add(added);
     await cacheService.saveSurvey(currentList);
     if (!mounted) return;
     setState(() {
@@ -193,8 +226,17 @@ class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Пикетажный журнал"),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Таблица'),
+            Tab(text: 'Нитка хода'),
+          ],
+        ),
       ),
-      floatingActionButton: (_loading || measurementList.isEmpty)
+      floatingActionButton: (_loading ||
+              measurementList.isEmpty ||
+              _tabController.index != 0)
           ? null
           : Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -216,45 +258,67 @@ class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
             ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : measurementList.isEmpty
-              ? const Center(child: Text('Нет данных для отображения'))
-              : SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Table(
-                        border: TableBorder.all(),
-                        defaultColumnWidth: const IntrinsicColumnWidth(),
-                        children: [
-                          TableRow(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
+          : TabBarView(
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildTable(),
+                SurveyLineView(measurements: measurementList),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildTable() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Table(
+            border: TableBorder.all(),
+            defaultColumnWidth: const IntrinsicColumnWidth(),
+            children: [
+              TableRow(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                ),
+                children: tableHeader
+                    .map((item) => TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              item,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            children: tableHeader
-                                .map((item) => TableCell(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          item,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
                           ),
-                          for (int index = 0;
-                              index < measurementList.length;
-                              index++)
-                            _buildRow(measurementList[index], index),
-                        ],
-                      ),
+                        ))
+                    .toList(),
+              ),
+              for (int index = 0;
+                  index < measurementList.length;
+                  index++)
+                _buildRow(measurementList[index], index),
+              TableRow(
+                children: [
+                  TableCell(
+                    child: IconButton(
+                      icon: const Icon(Icons.add),
+                      tooltip: 'Добавить измерение',
+                      onPressed: _add,
                     ),
                   ),
-                ),
+                  for (int i = 1; i < tableHeader.length; i++)
+                    const TableCell(child: SizedBox.shrink()),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -334,9 +398,13 @@ class _PiquetJournalScreenState extends State<PiquetJournalScreen> {
 }
 
 class _EditMeasurementDialog extends StatefulWidget {
-  const _EditMeasurementDialog({required this.measurement});
+  const _EditMeasurementDialog({this.measurement, this.initialFrom});
 
-  final MeasurementModel measurement;
+  /// null opens the dialog for adding a new measurement.
+  final MeasurementModel? measurement;
+
+  /// Prefills "От" when adding a new measurement.
+  final String? initialFrom;
 
   @override
   State<_EditMeasurementDialog> createState() =>
@@ -365,28 +433,31 @@ class _EditMeasurementDialogState extends State<_EditMeasurementDialog> {
   void initState() {
     super.initState();
     final m = widget.measurement;
-    _fromController = TextEditingController(text: m.from);
-    _toController = TextEditingController(text: m.to);
-    _distanceController = TextEditingController(text: m.distance.toString());
-    _compassController = TextEditingController(text: m.compass.toString());
-    _angleController = TextEditingController(text: m.angle.toString());
+    _fromController =
+        TextEditingController(text: m?.from ?? widget.initialFrom ?? '');
+    _toController = TextEditingController(text: m?.to ?? '');
+    _distanceController =
+        TextEditingController(text: m?.distance.toString() ?? '');
+    _compassController =
+        TextEditingController(text: m?.compass.toString() ?? '');
+    _angleController = TextEditingController(text: m?.angle.toString() ?? '');
     _leftController =
-        TextEditingController(text: m.left != null ? '${m.left![0]}' : '');
+        TextEditingController(text: m?.left != null ? '${m!.left![0]}' : '');
     _leftPrevController =
-        TextEditingController(text: m.left != null ? '${m.left![1]}' : '');
+        TextEditingController(text: m?.left != null ? '${m!.left![1]}' : '');
     _rightController =
-        TextEditingController(text: m.right != null ? '${m.right![0]}' : '');
+        TextEditingController(text: m?.right != null ? '${m!.right![0]}' : '');
     _rightPrevController =
-        TextEditingController(text: m.right != null ? '${m.right![1]}' : '');
+        TextEditingController(text: m?.right != null ? '${m!.right![1]}' : '');
     _topController =
-        TextEditingController(text: m.top != null ? '${m.top![0]}' : '');
+        TextEditingController(text: m?.top != null ? '${m!.top![0]}' : '');
     _topPrevController =
-        TextEditingController(text: m.top != null ? '${m.top![1]}' : '');
+        TextEditingController(text: m?.top != null ? '${m!.top![1]}' : '');
     _bottomController = TextEditingController(
-        text: m.bottom != null ? '${m.bottom![0]}' : '');
+        text: m?.bottom != null ? '${m!.bottom![0]}' : '');
     _bottomPrevController = TextEditingController(
-        text: m.bottom != null ? '${m.bottom![1]}' : '');
-    _commentController = TextEditingController(text: m.comment);
+        text: m?.bottom != null ? '${m!.bottom![1]}' : '');
+    _commentController = TextEditingController(text: m?.comment ?? '');
   }
 
   @override
@@ -435,19 +506,22 @@ class _EditMeasurementDialogState extends State<_EditMeasurementDialog> {
     final bool prevEmpty = prev.text.isEmpty;
     if (curEmpty && prevEmpty) return null;
     return <num>[
-      curEmpty ? 0 : num.parse(cur.text),
-      prevEmpty ? 0 : num.parse(prev.text),
+      curEmpty ? 0 : _parse(cur),
+      prevEmpty ? 0 : _parse(prev),
     ];
   }
+
+  num _parse(TextEditingController controller) =>
+      num.parse(controller.text.replaceAll(",", "."));
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final MeasurementModel edited = MeasurementModel(
       from: _fromController.text,
       to: _toController.text,
-      distance: num.parse(_distanceController.text),
-      compass: num.parse(_compassController.text.replaceAll(",", ".")),
-      angle: num.parse(_angleController.text.replaceAll(",", ".")),
+      distance: _parse(_distanceController),
+      compass: _parse(_compassController),
+      angle: _parse(_angleController),
       left: _pairOrNull(_leftController, _leftPrevController),
       right: _pairOrNull(_rightController, _rightPrevController),
       top: _pairOrNull(_topController, _topPrevController),
@@ -513,7 +587,9 @@ class _EditMeasurementDialogState extends State<_EditMeasurementDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Изменить измерение'),
+      title: Text(widget.measurement == null
+          ? 'Новое измерение'
+          : 'Изменить измерение'),
       content: SizedBox(
         width: 360,
         child: Form(

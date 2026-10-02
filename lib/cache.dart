@@ -37,7 +37,7 @@ class CacheService {
 
   /// Persists the whole measurement list for the current survey. Always call
   /// this with the freshest list read via [getSurvey] right before mutating
-  /// it, so concurrent screens (home form / journal edits) never clobber
+  /// it, so concurrent edits (e.g. two open dialogs) never clobber
   /// each other's changes.
   Future<bool> saveSurvey(List<MeasurementModel> list) async {
     return await cacheSurvey(list.map((item) => item.toJson()).toList());
