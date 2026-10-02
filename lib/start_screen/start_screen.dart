@@ -16,7 +16,15 @@ class _StartScreenState extends State<StartScreen> {
   final CacheService cacheService = GetIt.I<CacheService>();
   getCache() async {
     measurementList = await cacheService.getSurvey();
+    if (!mounted) return;
     setState(() {});
+  }
+
+  /// Re-reads the survey on return so "Продолжить" reflects measurements
+  /// added in the journal.
+  Future<void> _openJournal() async {
+    await context.push("/piquets");
+    await getCache();
   }
 
   Future<String> _nameSurvey(BuildContext context) async {
@@ -26,27 +34,30 @@ class _StartScreenState extends State<StartScreen> {
         final TextEditingController controller = TextEditingController();
         return AlertDialog(
           title: const Text("Введите название измерения"),
-          content: TextField(
-            controller: controller,
-          ),
+          content: TextField(controller: controller),
           actions: [
             ElevatedButton(
-                onPressed: () async {
-                  if (controller.text.isEmpty) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                        const SnackBar(content: Text("Введите название")));
-                  } else {
-                    final date = DateTime.now();
-                    await cacheService.surveyName("${controller.text}-${date.day}.${date.month}.${date.year}");
-                    Navigator.of(dialogContext).pop(controller.text);
-                  }
-                },
-                child: const Text("Подтвердить")),
+              onPressed: () async {
+                if (controller.text.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text("Введите название")),
+                  );
+                } else {
+                  final date = DateTime.now();
+                  await cacheService.surveyName(
+                    "${controller.text}-${date.day}.${date.month}.${date.year}",
+                  );
+                  Navigator.of(dialogContext).pop(controller.text);
+                }
+              },
+              child: const Text("Подтвердить"),
+            ),
             ElevatedButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop("");
-                },
-                child: const Text("Отмена")),
+              onPressed: () {
+                Navigator.of(dialogContext).pop("");
+              },
+              child: const Text("Отмена"),
+            ),
           ],
         );
       },
@@ -59,26 +70,29 @@ class _StartScreenState extends State<StartScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text("Начать новое измерение?"),
-          content:
-              const Text("Может привести к потери данных предыдущих измерений"),
+          content: const Text(
+            "Может привести к потери данных предыдущих измерений",
+          ),
           actions: [
             ElevatedButton(
-                onPressed: () async {
-                  await cacheService.clearSurvey();
-                  setState(() {
-                    measurementList.clear();
-                  });
-                  final String name = await _nameSurvey(context);
-                  if (name.isNotEmpty) {
-                    Navigator.of(dialogContext).pop(true);
-                  }
-                },
-                child: const Text("Подтвердить")),
+              onPressed: () async {
+                await cacheService.clearSurvey();
+                setState(() {
+                  measurementList.clear();
+                });
+                final String name = await _nameSurvey(context);
+                if (name.isNotEmpty) {
+                  Navigator.of(dialogContext).pop(true);
+                }
+              },
+              child: const Text("Подтвердить"),
+            ),
             ElevatedButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(false);
-                },
-                child: const Text("Отмена")),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text("Отмена"),
+            ),
           ],
         );
       },
@@ -86,40 +100,53 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   Future<void> _surveyListDialog(BuildContext content) async {
-
     final List<String> keyList = await cacheService.getSurveyList();
     final String currentSurvey = await cacheService.getSurveyName();
     return await showDialog(
       context: context,
-      builder: (dialogContext)  {
+      builder: (dialogContext) {
         return Dialog(
           child: Padding(
             padding: const EdgeInsets.all(18.0),
-            child: Column(children: [
-              const Text("Текущее измерение:"),
-              Text(currentSurvey),
-              Expanded(
-                child: ListView.separated(
-                  itemBuilder: (context, index) {
-                    final item = keyList[index];
-                    return ElevatedButton(onPressed: () async{
-                      await cacheService.surveyName(item);
-                        measurementList = await cacheService.getSurvey();
-                        setState(() {
-                          Navigator.of(context).pop();
-                        });
-                    }, child: Text(item));
+            child: Column(
+              children: [
+                const Text("Текущее измерение:"),
+                Text(currentSurvey),
+                Expanded(
+                  child: ListView.separated(
+                    itemBuilder: (context, index) {
+                      final item = keyList[index];
+                      return ElevatedButton(
+                        onPressed: () async {
+                          await cacheService.surveyName(item);
+                          measurementList = await cacheService.getSurvey();
+                          setState(() {
+                            Navigator.of(context).pop();
+                          });
+                        },
+                        child: Text(item),
+                      );
+                    },
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemCount: keyList.length,
+                  ),
+                ),
+                ElevatedButton(
+                  style: const ButtonStyle(
+                    backgroundColor: WidgetStatePropertyAll(Colors.red),
+                  ),
+                  onPressed: () {
+                    cacheService.clearList();
+                    Navigator.of(context).pop();
                   },
-                  separatorBuilder: (context, index) => const SizedBox(
-                        height: 12,
-                      ),
-                  itemCount: keyList.length),
-              ),
-              ElevatedButton(style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.red)),onPressed: (){ 
-                cacheService.clearList();
-                Navigator.of(context).pop();
-              }, child: const Text("Очистить", style: TextStyle(color: Colors.white),))
-            ],)
+                  child: const Text(
+                    "Очистить",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -146,24 +173,25 @@ class _StartScreenState extends State<StartScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-                onPressed: () async {
-                  if (measurementList.isNotEmpty) {
-                    final bool? confirmed = await _confirmationDialog(context);
-                    if (confirmed != null && confirmed) {
-                      context.push("/home");
-                    }
-                  } else {
-                    final String surveyName = await _nameSurvey(context);
-                    if (surveyName.isNotEmpty) context.push("/home");
+              onPressed: () async {
+                if (measurementList.isNotEmpty) {
+                  final bool? confirmed = await _confirmationDialog(context);
+                  if (confirmed != null && confirmed) {
+                    _openJournal();
                   }
-                },
-                child: const Text("Начать новое измерение")),
+                } else {
+                  final String surveyName = await _nameSurvey(context);
+                  if (surveyName.isNotEmpty) _openJournal();
+                }
+              },
+              child: const Text("Начать новое измерение"),
+            ),
+            const SizedBox(height: 12),
             if (measurementList.isNotEmpty)
               ElevatedButton(
-                  onPressed: () {
-                    context.push("/home");
-                  },
-                  child: Text("Продолжиь измерение")),
+                onPressed: _openJournal,
+                child: Text("Продолжиь измерение"),
+              ),
           ],
         ),
       ),
